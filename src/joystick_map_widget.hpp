@@ -28,25 +28,25 @@
 #include "remap_widget.hpp"
 
 class Joystick;
-
-class JoystickMapWidget : public Gtk::Dialog
-{
-private:
-  Gtk::Label label;
-  Gtk::HBox  hbox;
-  RemapWidget axis_map;
-  RemapWidget button_map;
 
+class JoystickMapWidget : public Gtk::Dialog {
 public:
-  JoystickMapWidget(Joystick& joystick);
+  JoystickMapWidget(const std::shared_ptr<Joystick>& joystick);
+  virtual ~JoystickMapWidget() {}
 
   void on_response(int v);
 
 private:
   JoystickMapWidget(const JoystickMapWidget&);
   JoystickMapWidget& operator=(const JoystickMapWidget&);
+
+private:
+  Gtk::Label label;
+  Gtk::HBox  hbox;
+  RemapWidget axis_map;
+  RemapWidget button_map;
 };
-
+
 #endif
 
 /* EOF */

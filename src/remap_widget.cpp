@@ -17,46 +17,54 @@
 */
 
 #include <iostream>
+#include <memory>
+
 #include <gtkmm/stock.h>
 
 #include "joystick.hpp"
 #include "remap_widget.hpp"
-
-class RemapWidgetColumns : public Gtk::TreeModel::ColumnRecord
-{
+
+class RemapWidgetColumns : public Gtk::TreeModel::ColumnRecord {
 public:
-  static RemapWidgetColumns* instance_;
+  static RemapWidgetColumns* _instance;
 
 public:
+  ~RemapWidgetColumns() {
+  }
+
   static RemapWidgetColumns& instance() {
-    if (instance_)
-      return *instance_;
-    else
-      return *(instance_ = new RemapWidgetColumns());
+    if (!_instance) {
+      _instance = new RemapWidgetColumns();
+    }
+
+    return *_instance;
   }
 
   Gtk::TreeModelColumn<int> id;
   Gtk::TreeModelColumn<std::string> name;
 
 private:
+
   RemapWidgetColumns() {
     add(id);
     add(name);
   }
+
 };
 
-RemapWidgetColumns* RemapWidgetColumns::instance_ = 0;
-
-RemapWidget::RemapWidget(Joystick& joystick_, Mode mode_)
-  : joystick(joystick_),
-    mode(mode_)
+RemapWidgetColumns* RemapWidgetColumns::_instance = nullptr;
+
+RemapWidget::RemapWidget(const std::shared_ptr<Joystick>& joystick_, Mode mode_)
+  : mode(mode_),
+    joystick(joystick_)
 {
   map_list = Gtk::ListStore::create(RemapWidgetColumns::instance());
   treeview.set_model(map_list);
-  if (mode == REMAP_AXIS)
+  if (mode == REMAP_AXIS) {
     treeview.append_column("Axes", RemapWidgetColumns::instance().name);
-  else
+  } else {
     treeview.append_column("Buttons", RemapWidgetColumns::instance().name);
+  }
 
   set_border_width(5);
   treeview.set_border_width(5);
@@ -65,14 +73,10 @@ RemapWidget::RemapWidget(Joystick& joystick_, Mode mode_)
   
   treeview.set_reorderable();
   
-  map_list->signal_row_inserted().connect(sigc::mem_fun(this, &RemapWidget::on_my_row_inserted));
   map_list->signal_row_deleted().connect(sigc::mem_fun(this, &RemapWidget::on_my_row_deleted));
-  map_list->signal_rows_reordered().connect(sigc::mem_fun(this, &RemapWidget::on_my_rows_reordered));
 }
 
-void
-RemapWidget::add_entry(int id, const std::string& str)
-{
+void RemapWidget::add_entry(int id, const std::string& str) {
   Gtk::ListStore::iterator it = map_list->append();
   (*it)[RemapWidgetColumns::instance().id]   = id;
   (*it)[RemapWidgetColumns::instance().name] = str;
@@ -82,92 +86,61 @@ struct RemapEntry {
   int id;
   std::string name;
 
-  bool operator<(const RemapEntry& rhs) const {
+  bool operator < (const RemapEntry& rhs) const {
     return id < rhs.id;
   }
 };
 
-void
-RemapWidget::on_clear()
-{
+void RemapWidget::on_clear() {
   // We simple sort the list here by 'id'
 
   // Convert the ListStore into a vector
   std::vector<RemapEntry> rows;
-  for(Gtk::TreeIter i = map_list->children().begin(); i != map_list->children().end(); ++i)
-    {
-      RemapEntry entry;
-      entry.id   = (*i)[RemapWidgetColumns::instance().id];
-      entry.name = (*i)[RemapWidgetColumns::instance().name];
-      rows.push_back(entry);
-    }
+  for(Gtk::TreeIter i = map_list->children().begin(); i != map_list->children().end(); ++i) {
+    RemapEntry entry;
+    entry.id   = (*i)[RemapWidgetColumns::instance().id];
+    entry.name = (*i)[RemapWidgetColumns::instance().name];
+    rows.push_back(entry);
+  }
 
   // Sort the vector
   std::sort(rows.begin(), rows.end());
 
   // Renter the vector into the liststore
   map_list->clear();
-  for(std::vector<RemapEntry>::iterator i = rows.begin(); i != rows.end(); ++i)
-    {
-      add_entry(i->id, i->name);                
-    }
+  for(std::vector<RemapEntry>::iterator i = rows.begin(); i != rows.end(); ++i) {
+    add_entry(i->id, i->name);                
+  }
 
   on_apply();
 }
 
-void
-RemapWidget::on_apply()
-{
+void RemapWidget::on_apply() {
   std::vector<int> mapping;
   std::vector<int> mapping_old;
-  for(Gtk::TreeIter i = map_list->children().begin(); i != map_list->children().end(); ++i)
-    {
-      mapping.push_back((*i)[RemapWidgetColumns::instance().id]);
-    }
+  for(Gtk::TreeIter i = map_list->children().begin(); i != map_list->children().end(); ++i) {
+    mapping.push_back((*i)[RemapWidgetColumns::instance().id]);
+  }
 
-  if (mode == REMAP_AXIS)
-    {
-      mapping_old = joystick.get_axis_mapping();
-      joystick.set_axis_mapping(mapping);
-      joystick.correct_calibration(mapping_old, mapping);
-    }
-  else if (mode == REMAP_BUTTON)
-    {
-      joystick.set_button_mapping(mapping);
-    }
+  if (mode == REMAP_AXIS) {
+    mapping_old = joystick->get_axis_mapping();
+    joystick->set_axis_mapping(mapping);
+    joystick->correct_calibration(mapping_old, mapping);
+  } else if (mode == REMAP_BUTTON) {
+    joystick->set_button_mapping(mapping);
+  }
 }
 
-void
-RemapWidget::on_my_rows_reordered(const Gtk::TreeModel::Path& path, const Gtk::TreeModel::iterator& iter, int* new_order)
-{
-  // std::cout << "on_my_rows_reordered" << std::endl;
-}                         
-
-void
-RemapWidget::on_my_row_inserted(const Gtk::TreeModel::Path& path, const Gtk::TreeModel::iterator& iter)
-{
-  // std::cout << "on_my_rows_inserted" << std::endl;
+void RemapWidget::on_my_row_deleted(const Gtk::TreeModel::Path&) {
+  if (mode == REMAP_AXIS) {
+    if (joystick->get_axis_count() == map_list->children().size()) {
+      on_apply();
+    }
+  } else if (mode == REMAP_BUTTON) {
+    if (joystick->get_button_count() == map_list->children().size()) {
+      on_apply();
+    }
+  }
 }
 
-void
-RemapWidget::on_my_row_deleted(const Gtk::TreeModel::Path& path)
-{
-  // std::cout << "on_my_rows_deleted" << std::endl;
-  
-  if (mode == REMAP_AXIS)
-    {
-      if (joystick.get_axis_count() == (int)map_list->children().size())
-        {
-          on_apply();
-        }
-    }
-  else if (mode == REMAP_BUTTON)
-    {
-      if (joystick.get_button_count() == (int)map_list->children().size())
-        {
-          on_apply();
-        }
-    }
-}
-
 /* EOF */

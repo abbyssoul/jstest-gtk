@@ -22,8 +22,7 @@
 #include <vector>
 #include <memory>
 #include <iostream>
-
-#include <expat.h>
+#include <expat.h> // FIXME: Not really needed
 
 /*
  * The code below does not produce a full DOM, but a drastically
@@ -31,56 +30,36 @@
  * contain child nodes, but not both. Nodes are also not allowed to
  * have attributes.
  */
-
-class XMLNode
-{
+
+class XMLNode {
 public:
   XMLNode() {}
   virtual ~XMLNode() {}
 
-  virtual std::string get_name() const =0;
-
-  virtual void print(std::ostream& out, int depth = 0) =0;
+  virtual std::string get_name() const = 0;
+  virtual void print(std::ostream& out, int depth = 0) = 0;
 };
-
-class XMLListNode : public XMLNode
-{
+
+class XMLListNode : public XMLNode {
 public:
   std::string name;
-  std::vector<XMLNode*> children;
+  std::vector<std::shared_ptr<XMLNode>> children;
 
   XMLListNode(const std::string& name_)
     : name(name_)
-  {
-  }
+  { }
 
-  ~XMLListNode()
-  {
-    for(std::vector<XMLNode*>::iterator i = children.begin(); i != children.end(); ++i)
-      {
-        delete *i;
-      }
-  }
+  virtual ~XMLListNode() {}
 
-  std::string get_name() const { return name; }
-
-  void print(std::ostream& out, int depth = 0)
-  {
-    std::cout << std::string(2*depth, ' ') << "<" << name << ">" << std::endl;
-    for(std::vector<XMLNode*>::iterator i = children.begin(); i != children.end(); ++i)
-      {
-        (*i)->print(out, depth + 1);
-      }
-    std::cout << std::string(2*depth, ' ') << "</" << name << ">" << std::endl;
-  }
+  std::string get_name() const override { return name; }
+  virtual void print(std::ostream& out, int depth = 0) override;
 
 private:
   XMLListNode(const XMLListNode&);
   XMLListNode& operator=(const XMLListNode&);
 };
-
-class XMLDataNode : public XMLNode
-{
+
+class XMLDataNode : public XMLNode {
 public:
   std::string name;
   std::string data;
@@ -89,38 +68,29 @@ public:
     : name(name_),
       data(data_)
   {}
+  virtual ~XMLDataNode() {}
 
-  std::string get_name() const { return name; }
+  std::string get_name() const override  { return name; }
 
-  void print(std::ostream& out, int depth = 0)
-  {
-    out << std::string(2*depth, ' ') << "<" << name << ">" << data << "</" << name << ">" << std::endl;
-  }
+  void print(std::ostream& out, int depth = 0) override;
 
 private:
   XMLDataNode(const XMLDataNode&);
   XMLDataNode& operator=(const XMLDataNode&);
 };
-
-class XMLParser
-{
+
+class XMLParser {
 public:
-  static std::auto_ptr<XMLNode> parse(const std::string& filename);
+  static std::shared_ptr<XMLNode> parse(const std::string& filename);
 
-private:
-  std::string filename;
-  XML_Parser parser;
-
-  std::auto_ptr<XMLNode> root_node;
-  std::vector<XMLListNode*> node_stack;
-
-  std::string node;
-  std::string cdata;
+public:
 
   XMLParser(const std::string& filename);
   ~XMLParser();
 
-  std::auto_ptr<XMLNode> get_root() { return root_node; }
+  std::shared_ptr<XMLNode> get_root() const { return root_node; }
+
+protected:
 
   void on_start_element(const char* el, const char** attr);
   void on_end_element(const char* el);
@@ -134,8 +104,17 @@ private:
 
   XMLParser(const XMLParser&);
   XMLParser& operator=(const XMLParser&);
-};
-
-#endif
 
+private:
+  std::string filename;
+  XML_Parser parser;
+
+  std::shared_ptr<XMLNode> root_node;
+  std::vector<std::shared_ptr<XMLListNode>> node_stack;
+
+  std::string node;
+  std::string cdata;
+};
+
+#endif
 /* EOF */

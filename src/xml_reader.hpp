@@ -23,28 +23,28 @@
 
 class XMLListNode;
 class XMLNode;
-
-class XMLReader
-{
-private:
-  XMLListNode* root;
-  
-public:
-  XMLReader(XMLListNode* node);
 
-  operator bool() const { return root; }
+class XMLReader {
+public:
+  XMLReader(std::shared_ptr<XMLListNode> node);
+
+  operator bool() const { return root.get(); }
 
   std::string get_name() const;
-  XMLNode*  get_node(const std::string& name) const;
   XMLReader get_section(const std::string& name) const;
+  std::shared_ptr<XMLNode>  get_node(const std::string& name) const;
+
   std::vector<XMLReader> get_sections() const;
   std::vector<std::string> get_string_list(const std::string& name) const;
 
   bool read(const std::string& name, bool& value) const;
   bool read(const std::string& name, int& value) const;
   bool read(const std::string& name, std::string& value) const;
+
+private:
+  std::shared_ptr<XMLListNode> root;
 };
-
+
 #endif
 
 /* EOF */

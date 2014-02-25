@@ -20,27 +20,18 @@
 #define HEADER_JSTEST_GTK_MAIN_HPP
 
 #include <vector>
+#include <map>
+#include <memory>
+
+
 #include <gtkmm/dialog.h>
 
 class Joystick;
 class JoystickListWidget;
-
-class Main
-{
-private:
-  static Main* current_;
+
+class Main {
 public:
-  static Main* current() { return current_; }
-
-private:
-  JoystickListWidget* list_dialog;
-
-  std::vector<Joystick*>    joysticks;
-  std::vector<Gtk::Dialog*> dialogs;
-
-  std::string cfg_directory;
-
-  void on_dialog_hide(Gtk::Dialog* dialog);
+  static Main* current() { return _instance; }
 
 public:
   Main();
@@ -48,14 +39,28 @@ public:
 
   void show_device_list_dialog();
   void show_device_property_dialog(const std::string& filename);
-  void show_calibration_dialog(Joystick& joystick);
-  void show_mapping_dialog(Joystick& joystick);
+  void show_calibration_dialog(const std::shared_ptr<Joystick>& joystick);
+  void show_mapping_dialog(const std::shared_ptr<Joystick>& joystick);
 
   int main(int argc, char** argv);
 
   std::string get_cfg_directory() const { return cfg_directory; }
-};
-
-#endif
 
+private:
+  void on_dialog_hide(std::weak_ptr<Gtk::Dialog> dialog);
+
+private:
+  static Main* _instance;
+
+private:
+  // JoystickListWidget*        list_dialog;
+  // std::vector<Joystick*>      joysticks;
+
+  std::map<std::string, std::shared_ptr<Joystick>>      joysticks;
+  std::vector<std::shared_ptr<Gtk::Dialog>>   dialogs;
+
+  std::string cfg_directory;
+};
+
+#endif
 /* EOF */

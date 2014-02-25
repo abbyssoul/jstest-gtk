@@ -19,25 +19,23 @@
 #ifndef HEADER_JSTEST_GTK_THROTTLE_WIDGET_HPP
 #define HEADER_JSTEST_GTK_THROTTLE_WIDGET_HPP
 
-#include <gtkmm/drawingarea.h>
-
-class ThrottleWidget : public Gtk::DrawingArea
-{
-private:
-  bool invert;
-  double pos;
+#include "custom_widget.h"
 
+class ThrottleWidget : public CustomWidget {
 public:
-  ThrottleWidget(int width, int height, bool invert = false);
+	ThrottleWidget(int width, int height, bool invert = false);
+	virtual ~ThrottleWidget() {}
 
-  bool on_expose_event(GdkEventExpose* event);
-  void set_pos(double p);
+	void set_pos(double p);
+
+protected:
+	virtual bool on_expose(const Cairo::RefPtr<Cairo::Context> cr);
 
 private:
-  ThrottleWidget(const ThrottleWidget&);
-  ThrottleWidget& operator=(const ThrottleWidget&);
+	bool invert;
+	double pos;
 };
-
+
 #endif
 
 /* EOF */

@@ -18,120 +18,93 @@
 
 #include "xml_parser.hpp"
 #include "xml_reader.hpp"
-
-XMLReader::XMLReader(XMLListNode* root_)
+
+XMLReader::XMLReader(std::shared_ptr<XMLListNode> root_)
   : root(root_)
 {
 }
 
-std::string
-XMLReader::get_name() const 
-{ 
-  return root->get_name(); 
+std::string XMLReader::get_name() const  {
+  return root ? root->get_name() : "";
 }
 
-XMLNode*
-XMLReader::get_node(const std::string& name) const
-{
-  if (root)
-    {
-      for(std::vector<XMLNode*>::const_iterator i = root->children.begin(); i != root->children.end(); ++i)
-        {
-          if ((*i)->get_name() == name)
-            return *i;
-        }
+std::shared_ptr<XMLNode> XMLReader::get_node(const std::string& name) const {
+  if (!root) {
+    return std::shared_ptr<XMLNode>();
+  }
+
+  for (auto i : root->children) {
+    if (i->get_name() == name) {
+      return i;
     }
+  }
   
-  return 0;
+    return std::shared_ptr<XMLNode>();
 }
 
-XMLReader
-XMLReader::get_section(const std::string& name) const
-{
-  return XMLReader(dynamic_cast<XMLListNode*>(get_node(name)));
+XMLReader XMLReader::get_section(const std::string& name) const {
+  return XMLReader(std::static_pointer_cast<XMLListNode>(get_node(name)));
 }
 
-std::vector<XMLReader>
-XMLReader::get_sections() const
-{
+std::vector<XMLReader> XMLReader::get_sections() const {
   std::vector<XMLReader> lst;
-  if (root)
-    {
-      for(std::vector<XMLNode*>::const_iterator i = root->children.begin(); i != root->children.end(); ++i)
-        {
-          lst.push_back(XMLReader(dynamic_cast<XMLListNode*>(*i)));
-        }
-    }
+  if (!root) {
+    return lst;
+  }
+
+  for (auto i : root->children) {
+    lst.push_back(XMLReader(std::static_pointer_cast<XMLListNode>(i)));
+  }
+
   return lst;
 }
 
 std::vector<std::string>
-XMLReader::get_string_list(const std::string& name) const
-{
+XMLReader::get_string_list(const std::string& name) const {
   std::vector<std::string> lst;
 
-  XMLListNode* node = dynamic_cast<XMLListNode*>(get_node(name));
-  if (node)
-    {
-      for(std::vector<XMLNode*>::iterator i = node->children.begin(); i != node->children.end(); ++i)
-        {
-          if (XMLDataNode* data = dynamic_cast<XMLDataNode*>(*i))
-            {
-              lst.push_back(data->data);
-            }
-        }
+  const auto node = std::dynamic_pointer_cast<XMLListNode>(get_node(name));
+  if (!node) {
+    return lst;
+  }
+
+  for(auto i : node->children) {
+    if (auto data = std::dynamic_pointer_cast<XMLDataNode>(i)) {
+      lst.push_back(data->data);
+    }
+  }
  
-      return lst;
-    }
-  else
-    {
-      return lst;
-    }
+  return lst;
 }
 
-bool
-XMLReader::read(const std::string& name, bool& value) const
-{
-  XMLDataNode* node = dynamic_cast<XMLDataNode*>(get_node(name));
-  if (node)
-    {
-      value = (node->data != "0");
-      return true;
-    }
-  else
-    {
-      return false;
-    }
+bool XMLReader::read(const std::string& name, bool& value) const {
+  const auto node = std::dynamic_pointer_cast<XMLDataNode>(get_node(name));
+  if (node) {
+    value = (node->data != "0");
+    return true;
+  } 
+
+  return false;
 }
 
-bool
-XMLReader::read(const std::string& name, int& value) const
-{
-  XMLDataNode* node = dynamic_cast<XMLDataNode*>(get_node(name));
-  if (node)
-    {
-      value = atoi(node->data.c_str());
-      return true;
-    }
-  else
-    {
-      return false;
-    }
+bool XMLReader::read(const std::string& name, int& value) const {
+  const auto node = std::dynamic_pointer_cast<XMLDataNode>(get_node(name));
+  if (node) {
+    value = atoi(node->data.c_str());
+    return true;
+  }
+
+  return false;
 }
 
-bool
-XMLReader::read(const std::string& name, std::string& value) const
-{
-  XMLDataNode* node = dynamic_cast<XMLDataNode*>(get_node(name));
-  if (node)
-    {
-      value = node->data;
-      return true;
-    }
-  else
-    {
-      return false;
-    }
+bool XMLReader::read(const std::string& name, std::string& value) const {
+  const auto node = std::dynamic_pointer_cast<XMLDataNode>(get_node(name));
+  if (node) {
+    value = node->data;
+    return true;
+  }
+  
+  return false;
 }
-
+
 /* EOF */

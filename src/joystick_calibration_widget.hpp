@@ -19,37 +19,21 @@
 #ifndef HEADER_JOYSTICK_CALIBRATION_WIDGET_HPP
 #define HEADER_JOYSTICK_CALIBRATION_WIDGET_HPP
 
+#include <memory>
+
 #include <gtkmm/box.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/label.h>
 #include <gtkmm/table.h>
 #include <gtkmm/dialog.h>
+#include <gtkmm/checkbutton.h>
 
 #include "joystick.hpp"
-
-class JoystickCalibrationWidget : public Gtk::Dialog
-{
-private:
-  Joystick& joystick;
 
-  Gtk::Label label;
-  Gtk::Frame axis_frame;
-  Gtk::Table  axis_table;
-  Gtk::HButtonBox buttonbox;
-  Gtk::Button calibration_button;
-
-  struct CalibrationData {
-    Gtk::CheckButton* invert;
-    Gtk::Adjustment* center_min;
-    Gtk::Adjustment* center_max;
-    Gtk::Adjustment* range_min;
-    Gtk::Adjustment* range_max;
-  };
-
-  std::vector<CalibrationData> calibration_data;
-
+class JoystickCalibrationWidget : public Gtk::Dialog {
 public:
-  JoystickCalibrationWidget(Joystick& joystick);
+  JoystickCalibrationWidget(const std::shared_ptr<Joystick>& joystick);
+  virtual ~JoystickCalibrationWidget() {}
 
   void update_with(const std::vector<Joystick::CalibrationData>& data);
 
@@ -61,8 +45,27 @@ public:
 private:
   JoystickCalibrationWidget(const JoystickCalibrationWidget&);
   JoystickCalibrationWidget& operator=(const JoystickCalibrationWidget&);
+
+private:
+  std::shared_ptr<Joystick> joystick;
+
+  Gtk::Label        label;
+  Gtk::Frame        axis_frame;
+  Gtk::Table        axis_table;
+  Gtk::HButtonBox   buttonbox;
+  Gtk::Button       calibration_button;
+
+  struct CalibrationData {
+    Gtk::CheckButton* invert;
+    Glib::RefPtr<Gtk::Adjustment> center_min;
+    Glib::RefPtr<Gtk::Adjustment> center_max;
+    Glib::RefPtr<Gtk::Adjustment> range_min;
+    Glib::RefPtr<Gtk::Adjustment> range_max;
+  };
+
+  std::vector<CalibrationData> calibration_data;
 };
-
+
 #endif
 
 /* EOF */

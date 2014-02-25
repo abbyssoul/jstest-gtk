@@ -20,27 +20,24 @@
 #define HEADER_JSTEST_GTK_JOYSTICK_DESCRIPTION_HPP
 
 #include <string>
-
-class JoystickDescription
-{
-private:
+
+class JoystickDescription {
 public:
   std::string filename;
   std::string name;
-  int axis_count;
-  int button_count;
+  size_t axis_count;
+  size_t button_count;
 
   JoystickDescription(const std::string& filename_,
                       const std::string& name_,
-                      int axis_count_,
-                      int button_count_)
+                      size_t axis_count_,
+                      size_t button_count_)
     : filename(filename_), 
       name(name_),
       axis_count(axis_count_),
       button_count(button_count_)
   {}
 };
-
-#endif
 
+#endif
 /* EOF */

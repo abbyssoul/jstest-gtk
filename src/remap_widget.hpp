@@ -19,6 +19,8 @@
 #ifndef HEADER_JSTEST_GTK_REMAP_WIDGET_HPP
 #define HEADER_JSTEST_GTK_REMAP_WIDGET_HPP
 
+#include <memory>
+
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
@@ -27,34 +29,32 @@
 #include <gtkmm/treemodel.h>
 
 class Joystick;
-
-class RemapWidget : public Gtk::VBox
-{
+
+class RemapWidget : public Gtk::VBox {
 public:
   enum Mode { REMAP_AXIS, REMAP_BUTTON };
 
-private:
-  Joystick& joystick;
-  Mode mode;
-
-  Gtk::TreeView treeview;
-  Glib::RefPtr<Gtk::ListStore> map_list;
-
 public:
-  RemapWidget(Joystick& joystick_, Mode mode);
+  RemapWidget(const std::shared_ptr<Joystick>& joystick, Mode mode);
+  virtual ~RemapWidget() {}
 
   void add_entry(int id, const std::string& str);
   void on_clear();
   void on_apply();
-  void on_my_row_inserted(const Gtk::TreeModel::Path& path, const Gtk::TreeModel::iterator& iter); 
   void on_my_row_deleted(const Gtk::TreeModel::Path& path); 
-  void on_my_rows_reordered(const Gtk::TreeModel::Path& path, const Gtk::TreeModel::iterator& iter, int* new_order);
                          
 private:
   RemapWidget(const RemapWidget&);
   RemapWidget& operator=(const RemapWidget&);
+
+private:
+  const Mode mode;
+  std::shared_ptr<Joystick> joystick;
+
+  Gtk::TreeView treeview;
+  Glib::RefPtr<Gtk::ListStore> map_list;
 };
-
+
 #endif
 
 /* EOF */

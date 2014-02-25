@@ -19,25 +19,22 @@
 #ifndef HEADER_JSTEST_GTK_BUTTON_WIDGET_HPP
 #define HEADER_JSTEST_GTK_BUTTON_WIDGET_HPP
 
-#include <gtkmm/drawingarea.h>
-
-class ButtonWidget : public Gtk::DrawingArea
-{
-private:
-  std::string name;
-  bool down;
+#include "custom_widget.h"
 
+class ButtonWidget : public CustomWidget {
 public:
-  ButtonWidget(int width, int height, const std::string& name);
+	ButtonWidget(int width, int height, const std::string& name);
+	virtual ~ButtonWidget() { }
 
-  bool on_expose_event(GdkEventExpose* event);
-  void set_down(bool t);
+	void set_down(bool t);
+
+protected:
+	virtual bool on_expose(const Cairo::RefPtr<Cairo::Context> cr);
 
 private:
-  ButtonWidget(const ButtonWidget&);
-  ButtonWidget& operator=(const ButtonWidget&);
+	const std::string name;
+	bool down;
 };
-
-#endif
 
+#endif
 /* EOF */

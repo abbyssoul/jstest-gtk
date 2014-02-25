@@ -19,29 +19,24 @@
 #ifndef HEADER_JSTEST_GTK_AXIS_WIDGET_HPP
 #define HEADER_JSTEST_GTK_AXIS_WIDGET_HPP
 
-#include <gtkmm/drawingarea.h>
-#include <gtkmm/alignment.h>
-
-class AxisWidget : public Gtk::Alignment
-{
-private:
-  Gtk::DrawingArea drawingarea;
-  double x;
-  double y;
+#include "custom_widget.h"
 
+class AxisWidget : public CustomWidget {
 public:
-  AxisWidget(int width, int height);
+	AxisWidget(int width, int height);
+	virtual ~AxisWidget() { }
 
-  bool on_my_expose_event(GdkEventExpose* event);
+	void set_x_axis(double x);
+	void set_y_axis(double x);
 
-  void set_x_axis(double x);
-  void set_y_axis(double x);
+protected:
+	virtual bool on_expose(const Cairo::RefPtr<Cairo::Context> cr);
 
 private:
-  AxisWidget(const AxisWidget&);
-  AxisWidget& operator=(const AxisWidget&);
+	double x;
+	double y;
 };
-
+
 #endif
 
 /* EOF */

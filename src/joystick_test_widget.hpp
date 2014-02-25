@@ -19,6 +19,8 @@
 #ifndef HEADER_JSTEST_GTK_JOYSTICK_TEST_WIDGET_HPP
 #define HEADER_JSTEST_GTK_JOYSTICK_TEST_WIDGET_HPP
 
+#include <memory> // shared_ptr
+
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <gtkmm/frame.h>
@@ -38,11 +40,30 @@
 
 class Joystick;
 class ButtonWidget;
-
-class JoystickTestWidget : public Gtk::Dialog
-{
+
+class JoystickTestWidget : public Gtk::Dialog {
+public:
+  JoystickTestWidget(const std::shared_ptr<Joystick>& joystick);
+  virtual ~JoystickTestWidget() {}
+
+  void axis_move(size_t number, int value);
+  void button_move(size_t number, bool value);
+
+  void on_calibrate();
+  void on_mapping();
+  void on_response(int v);
+
+  void on_save_profile();
+  void on_save_profile_as(const std::string& name);
+  void on_delete_profile();
+
 private:
-  Joystick& joystick;
+  JoystickTestWidget(const JoystickTestWidget&);
+  JoystickTestWidget& operator=(const JoystickTestWidget&);
+
+private:
+  const std::shared_ptr<Joystick> joystick;
+
   Gtk::Alignment alignment;
   Gtk::Label label;
 
@@ -79,26 +100,8 @@ private:
   Glib::RefPtr<Gdk::Pixbuf> button_off;
 
   std::vector<sigc::signal<void, double> > axis_callbacks;
-
-public:
-  JoystickTestWidget(Joystick& joystick);
-
-  void axis_move(int number, int value);
-  void button_move(int number, bool value);
-
-  void on_calibrate();
-  void on_mapping();
-  void on_response(int v);
-
-  void on_save_profile();
-  void on_save_profile_as(const std::string& name);
-  void on_delete_profile();
-
-private:
-  JoystickTestWidget(const JoystickTestWidget&);
-  JoystickTestWidget& operator=(const JoystickTestWidget&);
 };
-
+
 #endif
 
 /* EOF */

@@ -21,16 +21,15 @@
 #include "evdev_helper.hpp"
 #include "joystick.hpp"
 #include "joystick_map_widget.hpp"
-
-JoystickMapWidget::JoystickMapWidget(Joystick& joystick)
-  : Gtk::Dialog("Mapping: " + joystick.get_name()),
+
+JoystickMapWidget::JoystickMapWidget(const std::shared_ptr<Joystick>& joystick)
+  : Gtk::Dialog("Mapping: " + joystick->get_name()),
     label("Change the order of axis and button. The order applies directly to the "
           "joystick kernel driver, so it will work in any game, it is however not "
           "persistant across reboots."),
     axis_map(joystick, RemapWidget::REMAP_AXIS),
     button_map(joystick, RemapWidget::REMAP_BUTTON)
 {
-  set_has_separator(false);
   set_border_width(5);
   label.set_line_wrap();
 
@@ -43,37 +42,30 @@ JoystickMapWidget::JoystickMapWidget(Joystick& joystick)
   add_button(Gtk::Stock::REVERT_TO_SAVED, 1);
   add_button(Gtk::Stock::CLOSE, 0);
 
-  const std::vector<int>& button_mapping = joystick.get_button_mapping();
-  for(std::vector<int>::const_iterator i = button_mapping.begin(); i != button_mapping.end(); ++i)
-    {
-      std::ostringstream s;
-      s << (i - button_mapping.begin()) << ": " << btn2str(*i);
-      button_map.add_entry(*i, s.str());
-    }
+  const auto& button_mapping = joystick->get_button_mapping();
+  for(auto i = button_mapping.begin(); i != button_mapping.end(); ++i) {
+    std::ostringstream s;
+    s << (i - button_mapping.begin()) << ": " << btn2str(*i);
+    button_map.add_entry(*i, s.str());
+  }
 
-  const std::vector<int>& axis_mapping = joystick.get_axis_mapping();
-  for(std::vector<int>::const_iterator i = axis_mapping.begin(); i != axis_mapping.end(); ++i)
-    {
-      std::ostringstream s;
-      s << (i - axis_mapping.begin()) << ": " << abs2str(*i);
-      axis_map.add_entry(*i, s.str());
-    }
+  const auto& axis_mapping = joystick->get_axis_mapping();
+  for(auto i = axis_mapping.begin(); i != axis_mapping.end(); ++i) {
+    std::ostringstream s;
+    s << (i - axis_mapping.begin()) << ": " << abs2str(*i);
+    axis_map.add_entry(*i, s.str());
+  }
 
   signal_response().connect(sigc::mem_fun(this, &JoystickMapWidget::on_response));
 }
 
-void
-JoystickMapWidget::on_response(int v)
-{
-  if (v == 0)
-    {
-      hide();
-    }
-  else if (v == 1)
-    {
-      button_map.on_clear();
-      axis_map.on_clear();
-    }
+void JoystickMapWidget::on_response(int v) {
+  if (v == 0) {
+    hide();
+  } else if (v == 1) {
+    button_map.on_clear();
+    axis_map.on_clear();
+  }
 }
-
+
 /* EOF */

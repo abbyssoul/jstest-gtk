@@ -15,10 +15,10 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-env = Environment(CXXFLAGS=["-g", "-Wall", "-Werror"],
-                  LIBS=["expat"])
-env.ParseConfig('pkg-config --cflags --libs gtkmm-2.4 sigc++-2.0 x11')
+env = Environment(CXXFLAGS=["-g", "-Wall", "-Werror", "-Wextra", "--std=c++11"], LIBS=["expat"])
+env.ParseConfig('pkg-config --cflags --libs gtkmm-3.0 sigc++-2.0 x11')
 env.Program('jstest-gtk', [
+    'src/custom_widget.cpp',
     'src/axis_widget.cpp',
     'src/button_widget.cpp',
     'src/throttle_widget.cpp',

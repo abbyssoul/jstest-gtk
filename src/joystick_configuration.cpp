@@ -24,13 +24,11 @@
 #include <expat.h>
 
 #include "joystick_configuration.hpp"
-
-JoystickConfiguration::JoystickConfiguration(const std::string& filename)
-{
+
+JoystickConfiguration::JoystickConfiguration(const std::string& filename) {
 }
 
-JoystickConfiguration::~JoystickConfiguration()
-{
+JoystickConfiguration::~JoystickConfiguration() {
 }
-
+
 /* EOF */

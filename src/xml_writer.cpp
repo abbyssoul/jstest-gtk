@@ -19,70 +19,57 @@
 #include <stdexcept>
 
 #include "xml_writer.hpp"
-
+
 XMLWriter::XMLWriter(const std::string& filename)
-  : out(new std::ofstream(filename.c_str())),
+  : out(filename.c_str()),
     depth(0)
 {
-  if (!*out)
-    {
-      throw std::runtime_error("couldn't open " + filename);
-    }
-  else
-    {
-      (*out) << "<?xml version=\"1.0\"?>" << std::endl;
-    }
+  if (!out) {
+    throw std::runtime_error("couldn't open " + filename);
+  } else {
+    out << "<?xml version=\"1.0\"?>" << std::endl;
+  }
 }
 
-void
-XMLWriter::indent()
-{
-  for(int i = 0; i < depth; ++i)
-    *out << "  ";
+void XMLWriter::indent() {
+  for(int i = 0; i < depth; ++i) {
+    out << "  ";
+  }
 }
 
-void
-XMLWriter::start_section(const std::string& name)
-{
+void XMLWriter::start_section(const std::string& name) {
   indent();
-  (*out.get()) << "<" << name << ">" << std::endl;
+
+  out << "<" << name << ">" << std::endl;
   depth += 1;
 }
 
-void
-XMLWriter::end_section(const std::string& name)
-{
+void XMLWriter::end_section(const std::string& name) {
   depth -= 1;
   indent();
-  *out << "</" << name << ">" << std::endl;
+  out << "</" << name << ">" << std::endl;
 }
 
-void
-XMLWriter::write(const std::string& name, const std::string& value)
-{
+void XMLWriter::write(const std::string& name, const std::string& value) {
   indent();
   // FIXME: Implement magic to convert things to UTF-8
-  *out << "<" << name << ">";
-  *out << value;
-  *out << "</" << name << ">" << std::endl;
+  out << "<" << name << ">";
+  out << value;
+  out << "</" << name << ">" << std::endl;
 }
 
-void
-XMLWriter::write(const std::string& name, int value)
-{
+void XMLWriter::write(const std::string& name, int value) {
   indent();
-  *out << "<" << name << ">";
-  *out << value;
-  *out << "</" << name << ">" << std::endl;
+  out << "<" << name << ">";
+  out << value;
+  out << "</" << name << ">" << std::endl;
 }
 
-void
-XMLWriter::write(const std::string& name, bool value)
-{
+void XMLWriter::write(const std::string& name, bool value) {
   indent();
-  *out << "<" << name << ">";
-  *out << value;
-  *out << "</" << name << ">" << std::endl; 
+  out << "<" << name << ">";
+  out << value;
+  out << "</" << name << ">" << std::endl; 
 }
-
+
 /* EOF */

@@ -23,51 +23,45 @@
 #include <expat.h>
 
 #include "xml_parser.hpp"
-
+
 // static C functions that map back to the C++ member functions
 void
-XMLParser::start_element(void* userdata, const char* el, const char** attr)
-{
+XMLParser::start_element(void* userdata, const char* el, const char** attr) {
   static_cast<XMLParser*>(userdata)->on_start_element(el, attr);
 }
 
 void
-XMLParser::end_element(void* userdata, const char* el)
-{
+XMLParser::end_element(void* userdata, const char* el) {
   static_cast<XMLParser*>(userdata)->on_end_element(el);
 }
 
 void
-XMLParser::character_data(void* userdata, const char* s, int len)
-{
+XMLParser::character_data(void* userdata, const char* s, int len) {
   static_cast<XMLParser*>(userdata)->on_character_data(s, len);
 }
-
-std::auto_ptr<XMLNode>
-XMLParser::parse(const std::string& filename)
-{
-  XMLParser tree(filename);
+
+std::shared_ptr<XMLNode>
+XMLParser::parse(const std::string& filename) {
+  const XMLParser tree(filename);
   return tree.get_root();
 }
-
+
 XMLParser::XMLParser(const std::string& filename_)
   : filename(filename_),
-    parser(0)
+    parser(NULL)
 {
   std::vector<char> data;
+  
   { // Read the file into the vector data
     std::ifstream in(filename.c_str(), std::ios::binary);
-    if (!in)
-      {
-        throw std::runtime_error("couldn't open: " + filename);
-      }
-    else
-      {
-        in.seekg (0, std::ios::end);
-        data.resize(in.tellg());
-        in.seekg (0, std::ios::beg);
-        in.read(&*data.begin(), data.size());
-      }
+    if (!in) {
+      throw std::runtime_error("couldn't open: " + filename);
+    } else {
+      in.seekg (0, std::ios::end);
+      data.resize(in.tellg());
+      in.seekg (0, std::ios::beg);
+      in.read(&*data.begin(), data.size());
+    }
   }
 
   parser = XML_ParserCreate(NULL);
@@ -75,104 +69,105 @@ XMLParser::XMLParser(const std::string& filename_)
   XML_SetElementHandler(parser, &start_element, &end_element);
   XML_SetCharacterDataHandler(parser, &character_data);
 
-  if (XML_Parse(parser, &*data.begin(), data.size(), 0) == XML_STATUS_ERROR)
-    {
-      std::ostringstream out;
-      out << filename << ":" << XML_GetCurrentLineNumber(parser)
-          << ": parse error: " << XML_ErrorString(XML_GetErrorCode(parser));
+  if (XML_Parse(parser, &*data.begin(), data.size(), 0) == XML_STATUS_ERROR) {
+    std::ostringstream out;
+    out << filename << ":" << XML_GetCurrentLineNumber(parser)
+        << ": parse error: " << XML_ErrorString(XML_GetErrorCode(parser));
 
-      throw std::runtime_error(out.str());
-    }
+    throw std::runtime_error(out.str());
+  }
 }
 
-XMLParser::~XMLParser()
-{
+XMLParser::~XMLParser() {
   XML_ParserFree(parser);
 }
 
-void
-XMLParser::on_start_element(const char* name, const char** attr)
-{
-  if (*attr)
+void XMLParser::on_start_element(const char* name, const char** attr) {
+  if (*attr) {
     raise_error("attribute not allowed");
+  }
 
   // spaces are ignored, everything else is an error
-  for(int i = 0; i < (int)cdata.size(); ++i)
-    if (!isspace(cdata[i]))
+  for (auto i : cdata) {
+    if (!isspace(i)) {
       raise_error("unexpected character data");
+    }
+  }
+
   cdata.clear();
 
-  if (!node.empty())
-    {
-      XMLListNode* new_node = new XMLListNode(node);
-      if (!root_node.get())
-        {
-          root_node.reset(new_node);
-        }
-      else
-        {
-          node_stack.back()->children.push_back(new_node);
-        }
-      node_stack.push_back(new_node);
+  if (!node.empty()) {
+    auto new_node = std::make_shared<XMLListNode>(node);
+
+    if (!root_node) {
+      root_node = new_node;
+    } else {
+      node_stack.back()->children.push_back(new_node);
     }
+
+    node_stack.push_back(new_node);
+  }
 
   node = name;
 }
 
-void
-XMLParser::on_end_element(const char* el)
-{
-  if (!node.empty() && !cdata.empty())
-    {
-      node_stack.back()->children.push_back(new XMLDataNode(node, cdata));
-      node.clear();
-      cdata.clear();
+void XMLParser::on_end_element(const char*) {
+  if (!node.empty() && !cdata.empty()) {
+    node_stack.back()->children.push_back(std::make_shared<XMLDataNode>(node, cdata));
+    node.clear();
+    cdata.clear();
+  } else {
+    // spaces are ignored, everything else is an error
+    for(size_t i = 0; i < cdata.size(); ++i) {
+      if (!isspace(cdata[i])) {
+        raise_error("unexpected character data");
+      }
     }
-  else
-    {
-      // spaces are ignored, everything else is an error
-      for(int i = 0; i < (int)cdata.size(); ++i)
-        if (!isspace(cdata[i]))
-          raise_error("unexpected character data");
 
-      node_stack.pop_back();
-      node.clear();
-      cdata.clear();      
-    }
+    node_stack.pop_back();
+    node.clear();
+    cdata.clear();      
+  }
 }
 
-void
-XMLParser::on_character_data(const char* s, int len)
-{
+void XMLParser::on_character_data(const char* s, int len) {
   cdata += std::string(s, len);
 }
 
-void
-XMLParser::raise_error(const std::string& str)
-{
+void XMLParser::raise_error(const std::string& str) {
   std::ostringstream out;
   out << filename << ":" << XML_GetCurrentLineNumber(parser) << ": " << str;
   throw std::runtime_error(out.str());
 }
-
+
+void XMLListNode::print(std::ostream& out, int depth) {
+  out << std::string(2*depth, ' ') << "<" << name << ">" << std::endl;
+
+  for(auto i : children) {
+    i->print(out, depth + 1);
+  }
+
+  out << std::string(2*depth, ' ') << "</" << name << ">" << std::endl;
+}
+
+void XMLDataNode::print(std::ostream& out, int depth) {
+  out << std::string(2*depth, ' ') << "<" << name << ">" << data << "</" << name << ">" << std::endl;
+}
+
+
 #ifdef __TEST__
-int main(int argc, char** argv)
-{
-  try 
-    {
-      for(int i = 1; i < argc; ++i)
-        {
-          std::auto_ptr<XMLNode> root = XMLParser::parse(argv[i]);
-          root->print(std::cout);
-        }
-    } 
-  catch(std::exception& err) 
-    {
-      std::cout << "Error: " << err.what() << std::endl;
+int main(int argc, char** argv) {
+  try {
+    for(int i = 1; i < argc; ++i) {
+      const auto root = XMLParser::parse(argv[i]);
+      root->print(std::cout);
     }
+  } catch(std::exception& err) {
+    std::cout << "Error: " << err.what() << std::endl;
+  }
 
   return 0;
 }
 #endif
-
+
 /* EOF */

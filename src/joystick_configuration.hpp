@@ -20,11 +20,8 @@
 #define HEADER_JSTEST_GTK_JOYSTICK_CONFIGURATION_HPP
 
 #include <string>
-
-class JoystickConfiguration
-{
-private:
 
+class JoystickConfiguration {
 public:
   JoystickConfiguration(const std::string& filename);
   ~JoystickConfiguration();
@@ -42,7 +39,6 @@ private:
   JoystickConfiguration(const JoystickConfiguration&);
   JoystickConfiguration& operator=(const JoystickConfiguration&);
 };
-
-#endif
 
+#endif
 /* EOF */

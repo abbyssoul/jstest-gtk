@@ -19,24 +19,21 @@
 #ifndef HEADER_JSTEST_GTK_RUDDER_WIDGET_HPP
 #define HEADER_JSTEST_GTK_RUDDER_WIDGET_HPP
 
-#include <gtkmm/drawingarea.h>
-
-class RudderWidget : public Gtk::DrawingArea
-{
-private:
-  double pos;
+#include "custom_widget.h"
 
+class RudderWidget : public CustomWidget {
 public:
-  RudderWidget(int width, int height);
+	RudderWidget(int width, int height);
+	virtual ~RudderWidget() {}
 
-  bool on_expose_event(GdkEventExpose* event);
-  void set_pos(double p);
+	void set_pos(double p);
 
 private:
-  RudderWidget(const RudderWidget&);
-  RudderWidget& operator=(const RudderWidget&);
-};
-
-#endif
+	virtual bool on_expose(const Cairo::RefPtr<Cairo::Context> cr);
 
+private:
+	double pos;
+};
+
+#endif
 /* EOF */

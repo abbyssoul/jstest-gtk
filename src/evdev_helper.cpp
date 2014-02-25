@@ -23,10 +23,9 @@
 #include <stdexcept>
 #include <map>
 #include "evdev_helper.hpp"
-
+
 template<class Enum>
-class EnumBox
-{
+class EnumBox {
 protected:
   std::string name;
   std::map<Enum, std::string> enum2string;

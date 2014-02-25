@@ -21,13 +21,8 @@
 
 #include <memory>
 #include <fstream>
-
-class XMLWriter
-{
-private:
-  std::auto_ptr<std::ofstream> out;
-  int depth;
-  
+
+class XMLWriter {
 public:
   XMLWriter(const std::string& filename);
 
@@ -41,8 +36,13 @@ public:
 private:
   XMLWriter(const XMLWriter&);
   XMLWriter& operator=(const XMLWriter&);
+
+private:
+  std::ofstream out;
+  // std::auto_ptr<std::ofstream> out;
+  int depth;
 };
 
 #endif
-
+
 /* EOF */

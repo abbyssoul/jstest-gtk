@@ -18,18 +18,18 @@
 
 #include <iostream>
 #include "jscfg.hpp"
-
-void print_help()
-{
+
+
+void print_help() {
   std::cout << "Usage: jscfg [OPTIONS] JOYSTICKDEVICE\n"
             << "\n" 
             << "  --help, -h                 Display this help\n"
             << "  --btnmap, -b B1,B2,...     Display this help\n"
             << "  --axismap, -a A1,A2,...    Display this help\n"
 }
-
-int main(int argc, char** argv)
-{
+
+
+int main(int argc, char** argv) {
   for(int i = 1; i < argc; ++i)
     {
       
@@ -37,5 +37,5 @@ int main(int argc, char** argv)
   
   return 0;
 }
-
+
 /* EOF */

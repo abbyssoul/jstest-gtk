@@ -17,87 +17,64 @@
 */
 
 #include "axis_widget.hpp"
-
+
 AxisWidget::AxisWidget(int width, int height)
-  : Gtk::Alignment(Gtk::ALIGN_CENTER, Gtk::ALIGN_TOP, 0.0f, 0.0f),
+  : CustomWidget(width, height),
     x(0), y(0)
 {
-  //modify_bg(Gtk::STATE_NORMAL , Gdk::Color("white"));
-  //modify_fg(Gtk::STATE_NORMAL , Gdk::Color("black"));
-  add(drawingarea);
-  drawingarea.signal_expose_event().connect(sigc::mem_fun(this, &AxisWidget::on_my_expose_event));
-  drawingarea.set_size_request(width, height);
 }
 
-bool
-AxisWidget::on_my_expose_event(GdkEventExpose* event)
-{
-  Glib::RefPtr<Gdk::Window> window = drawingarea.get_window();
-  if(window)
-    {
-      Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
-      if (0)
-        {
-          cr->rectangle(event->area.x, event->area.y,
-                        event->area.width, event->area.height);
-          cr->clip();
-        }
+bool AxisWidget::on_expose(const Cairo::RefPtr<Cairo::Context> cr) {
+  const int w  = _drawingarea.get_allocation().get_width()  - 10;
+  const int h  = _drawingarea.get_allocation().get_height() - 10;
+  const int px = w/2 + (w/2  * x);
+  const int py = h/2 + (h/2 * y);
 
-      int w  = drawingarea.get_allocation().get_width()  - 10;
-      int h  = drawingarea.get_allocation().get_height() - 10;
-      int px = w/2 + (w/2  * x);
-      int py = h/2 + (h/2 * y);
+  cr->translate(5, 5);
 
-      cr->translate(5, 5);
+  // Outer Rectangle
+  cr->set_source_rgb(0.0, 0.0, 0.0);
+  cr->set_line_width(1.0);
+  cr->rectangle(0, 0, w, h);
+  cr->stroke();
 
-      // Outer Rectangle
-      cr->set_source_rgb(0.0, 0.0, 0.0);
-      cr->set_line_width(1.0);
-      cr->rectangle(0, 0, w, h);
-      cr->stroke();
+  // BG Circle
+  cr->arc(w/2, h/2, w/2, 0.0, 2.0 * M_PI);
+  cr->set_source_rgba(0.0, 0.0, 0.0, 0.1);
+  cr->fill();
 
-      // BG Circle
-      cr->arc(w/2, h/2, w/2, 0.0, 2.0 * M_PI);
-      cr->set_source_rgba(0.0, 0.0, 0.0, 0.1);
-      cr->fill();
+  // Cross
+  cr->set_line_width(0.5);
+  cr->set_source_rgba(0.0, 0.0, 0.0, 0.5);
+  cr->move_to(w/2, 0);
+  cr->line_to(w/2, h);
 
-      // Cross
-      cr->set_line_width(0.5);
-      cr->set_source_rgba(0.0, 0.0, 0.0, 0.5);
-      cr->move_to(w/2, 0);
-      cr->line_to(w/2, h);
+  cr->set_source_rgba(0.0, 0.0, 0.0, 0.5);
+  cr->move_to(0, h/2);
+  cr->line_to(w, h/2);
+  cr->stroke();
 
-      cr->set_source_rgba(0.0, 0.0, 0.0, 0.5);
-      cr->move_to(0, h/2);
-      cr->line_to(w, h/2);
-      cr->stroke();
-
-      // Cursor
-      cr->set_source_rgb(0.0, 0.0, 0.0);
-      cr->set_line_width(2.0);
-      cr->move_to(px, py-5);          
-      cr->line_to(px, py+5);
-      cr->move_to(px-5, py);          
-      cr->line_to(px+5, py);
-      cr->stroke();
-    }
+  // Cursor
+  cr->set_source_rgb(0.0, 0.0, 0.0);
+  cr->set_line_width(2.0);
+  cr->move_to(px, py-5);          
+  cr->line_to(px, py+5);
+  cr->move_to(px-5, py);          
+  cr->line_to(px+5, py);
+  cr->stroke();
   
   return true;
 }
 
-void
-AxisWidget::set_x_axis(double x_)
-{
+void AxisWidget::set_x_axis(double x_) {
   x = x_;
   queue_draw();
 }
 
-void
-AxisWidget::set_y_axis(double y_)
-{
+void AxisWidget::set_y_axis(double y_) {
   y = y_;
   queue_draw();
 }
-
+
 /* EOF */
 

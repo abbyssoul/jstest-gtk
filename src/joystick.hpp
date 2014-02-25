@@ -22,15 +22,13 @@
 #include <sigc++/signal.h>
 #include <sigc++/connection.h>
 #include <glibmm/main.h>
-#include <glibmm/ustring.h>
 #include <linux/joystick.h>
 #include "joystick_description.hpp"
 
 class XMLReader;
 class XMLWriter;
-
-class Joystick
-{
+
+class Joystick {
 public:
   struct CalibrationData {
     bool calibrate;
@@ -41,20 +39,6 @@ public:
     int  range_max;
   };
 
-private:
-  int fd;
-
-  std::string filename;
-  std::string orig_name;
-  Glib::ustring name;
-  int axis_count;
-  int button_count;
-
-  std::vector<int> axis_state;
-  std::vector<CalibrationData> orig_calibration_data;
-
-  sigc::connection connection;
-
 public:
   Joystick(const std::string& filename);
   ~Joystick();
@@ -64,15 +48,15 @@ public:
   void update();
   bool on_in(Glib::IOCondition cond);
 
-  std::string get_filename() const { return filename; }
-  Glib::ustring get_name() const { return name; }
-  int get_axis_count() const   { return axis_count; }
-  int get_button_count() const { return button_count; }
+  std::string get_filename() const  { return _description.filename; }
+  std::string get_name() const      { return _description.name; }
+  size_t get_axis_count() const     { return _description. axis_count; }
+  size_t get_button_count() const   { return _description.button_count; }
 
-  sigc::signal<void, int, int>  axis_move;
-  sigc::signal<void, int, bool> button_move;
+  sigc::signal<void, size_t, int>  axis_move;
+  sigc::signal<void, size_t, bool> button_move;
 
-  int get_axis_state(int id);
+  int get_axis_state(size_t id);
 
   static std::vector<JoystickDescription> get_joysticks();
 
@@ -104,8 +88,18 @@ public:
 private:
   Joystick(const Joystick&);
   Joystick& operator=(const Joystick&);
-};
-
-#endif
 
+private:
+  int fd;
+
+  JoystickDescription _description;
+  std::string orig_name;
+
+  std::vector<int> axis_state;
+  std::vector<CalibrationData> orig_calibration_data;
+
+  sigc::connection connection;
+};
+
+#endif
 /* EOF */
